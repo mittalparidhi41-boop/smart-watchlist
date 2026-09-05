@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Smart Market Watchlist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f4f5f7;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --text: #111827;
+            --muted: #6b7280;
+            --up: #16a34a;
+            --up-bg: #ecfdf5;
+            --down: #dc2626;
+            --down-bg: #fef2f2;
+            --meaningful-bg: #fffbeb;
+            --meaningful-border: #f59e0b;
+            --accent: #4f46e5;
+            --accent-light: #eef2ff;
+            --radius: 14px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+        }
+        .page { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+
+        /* ---------- top nav ---------- */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand-mark {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 15px;
+        }
+        .brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.3px; }
+
+        .profile { position: relative; }
+        .profile-trigger {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 5px 12px 5px 5px;
+            cursor: pointer;
+        }
+        .avatar {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white; font-weight: 700; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .profile-trigger .uname { font-size: 13px; font-weight: 600; }
+        .chevron { font-size: 10px; color: var(--muted); }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0; top: 46px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 24px rgba(17,24,39,0.10);
+            width: 220px;
+            padding: 16px;
+            z-index: 20;
+        }
+        .profile-dropdown.open { display: block; }
+        .profile-dropdown .avatar { width: 40px; height: 40px; font-size: 16px; margin-bottom: 10px; }
+        .profile-dropdown .name { font-weight: 700; font-size: 15px; }
+        .profile-dropdown .since { color: var(--muted); font-size: 12px; margin: 2px 0 14px; }
+        .profile-dropdown button {
+            width: 100%; padding: 9px; font-size: 13px;
+            background: #f9fafb;
+        }
+
+        /* ---------- stats row ---------- */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+        .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+        .stat-value.warn { color: var(--meaningful-border); }
+        .stat-value.up { color: var(--up); }
+        .stat-value.down { color: var(--down); }
+        .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+        /* ---------- controls ---------- */
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+        .panel-title {
+            font-size: 15px; font-weight: 700; margin: 0 0 4px;
+        }
+        .panel-subtitle { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        input[type=text] {
+            flex: 1; min-width: 160px;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        input[type=text]:focus { outline: 2px solid var(--accent); border-color: transparent; }
+        button {
+            padding: 11px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text);
+        }
+        button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+        button:hover { filter: brightness(0.97); }
+
+        .status-bar {
+            font-size: 12px; color: var(--muted);
+            margin: -6px 0 18px 2px;
+        }
+
+        /* ---------- watchlist cards ---------- */
+        .section-label {
+            font-size: 13px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.06em;
+            margin: 0 0 10px 2px;
+        }
+        .card-list { display: flex; flex-direction: column; gap: 10px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .card.meaningful {
+            background: var(--meaningful-bg);
+            border-color: var(--meaningful-border);
+            border-width: 1.5px;
+        }
+        .stock-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 800; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .card.meaningful .stock-icon { background: #fef3c7; color: #92400e; }
+
+        .card-main { flex: 1; min-width: 0; }
+        .symbol-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+        .symbol { font-weight: 700; font-size: 15px; }
+        .price { font-size: 15px; color: var(--text); font-weight: 500; }
+        .price-trail { font-size: 12px; color: var(--muted); margin-top: 3px; }
+        .change {
+            font-weight: 700; font-size: 13px;
+            padding: 3px 9px;
+            border-radius: 999px;
+        }
+        .change.up { color: var(--up); background: var(--up-bg); }
+        .change.down { color: var(--down); background: var(--down-bg); }
+        .badge {
+            font-size: 10.5px; font-weight: 800;
+            color: #92400e; background: #fde68a;
+            padding: 3px 8px; border-radius: 999px;
+            letter-spacing: 0.03em;
+        }
+        .reason { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+        .status-text { color: var(--muted); font-size: 13px; font-style: italic; }
+
+        .icon-btn {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted);
+            flex-shrink: 0;
+            background: transparent;
+            border-color: var(--border);
+        }
+        .icon-btn:hover { background: #fef2f2; color: var(--down); border-color: #fecaca; }
+
+        .empty-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: var(--muted);
+            background: var(--card);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+        .empty-state .icon { font-size: 34px; margin-bottom: 10px; }
+        .empty-state b { color: var(--text); }
+
+        .footnote {
+            color: var(--muted); font-size: 12.5px; line-height: 1.6;
+            margin-top: 24px; padding: 14px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        @media (max-width: 560px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .brand-name { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <div class="navbar">
+        <div class="brand">
+            <div class="brand-mark">SW</div>
+            <div class="brand-name">Smart Watchlist</div>
+        </div>
+
+        <div class="profile">
+            <button class="profile-trigger" onclick="document.getElementById('profileMenu').classList.toggle('open')">
+                <span class="avatar">{{ username[0]|upper }}</span>
+                <span class="uname">{{ username }}</span>
+                <span class="chevron">▾</span>
+            </button>
+            <div class="profile-dropdown" id="profileMenu">
+                <div class="avatar">{{ username[0]|upper }}</div>
+                <div class="name">{{ username }}</div>
+                <div class="since">Member since {{ member_since[:10] if member_since else "—" }}</div>
+                <form action="/logout" method="post">
+                    <button type="submit">Log out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_count }}</div>
+            <div class="stat-label">Stocks tracked</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value warn">{{ meaningful_count }}</div>
+            <div class="stat-label">Meaningful today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value up">{{ up_count }}</div>
+            <div class="stat-label">Up</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value down">{{ down_count }}</div>
+            <div class="stat-label">Down</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <p class="panel-title">Add to your watchlist</p>
+        <p class="panel-subtitle">NSE stocks need a .NS suffix, e.g. TCS.NS · US stocks just need the ticker, e.g. AAPL</p>
+        <div class="controls">
+            <form action="/add" method="post" style="display: flex; gap: 8px; flex: 1;">
+                <input type="text" name="symbol" placeholder="e.g. TCS.NS or AAPL" required>
+                <button type="submit" class="primary">Add</button>
+            </form>
+            <form action="/refresh" method="post">
+                <button type="submit">↻ Refresh Prices</button>
+            </form>
+        </div>
+    </div>
+
+    <p class="status-bar">
+        {% if last_updated %}
+            Last updated {{ last_updated }} (UTC) ·
+        {% endif %}
+        auto-refreshes every {{ auto_refresh_minutes }} min
+    </p>
+
+    <p class="section-label">Your Watchlist</p>
+
+    {% if items %}
+    <div class="card-list">
+        {% for item in items %}
+        <div class="card {{ 'meaningful' if item.meaningful else '' }}">
+            <div class="stock-icon">{{ item.symbol[:2] }}</div>
+            <div class="card-main">
+                <div class="symbol-row">
+                    <span class="symbol">{{ item.symbol }}</span>
+                    {% if item.price is not none %}
+                        <span class="price">{{ item.price }}</span>
+                    {% endif %}
+                    {% if item.change_pct is not none %}
+                        <span class="change {{ 'up' if item.change_pct >= 0 else 'down' }}">
+                            {{ '+' if item.change_pct >= 0 else '' }}{{ item.change_pct }}%
+                        </span>
+                        {% if item.meaningful %}<span class="badge">MEANINGFUL</span>{% endif %}
+                    {% endif %}
+                </div>
+
+                {% if item.last_seen_price is not none %}
+                    <span class="price-trail">You last checked at {{ item.last_seen_price }}</span>
+                {% endif %}
+
+                {% if item.status %}
+                    <span class="status-text">{{ item.status }}</span>
+                {% elif item.reason %}
+                    <span class="reason">{{ item.reason }}</span>
+                {% endif %}
+            </div>
+            <form action="/remove" method="post">
+                <input type="hidden" name="symbol" value="{{ item.symbol }}">
+                <button type="submit" class="icon-btn" title="Remove">✕</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📈</div>
+        Your watchlist is empty.<br>
+        Add a symbol above to get started — try <b>TCS.NS</b> or <b>AAPL</b>.
+    </div>
+    {% endif %}
+
+    <p class="footnote">
+        <b>How "meaningful" is decided:</b> each stock is compared against its own recent average
+        move, not one flat number for everyone — a move counts once it's 1.5x that stock's normal
+        behavior, with a small floor so quiet stocks don't flag on noise. "Change since last check"
+        compares today's price to the price YOU personally saw the last time you opened this page.
+        Stocks with a meaningful change are always shown first.
+    </p>
+</div>
+</body>
+</html>
